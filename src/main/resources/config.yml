@@ -1,0 +1,61 @@
+plugin:
+  debug: false
+  version: 1.0
+
+tasks:
+  community:
+    delay: 600
+    target: <<everyone>>
+    # lists can be randomized or sequenced
+    source: <<lists.community>>:<<random>>
+  test:
+    delay: 600
+    # groups use the permission node 'group.<groupname>'
+    target: <<groups:default,user,admin>>
+    source: <<lists.test>>:<<sequence>>
+
+commands:
+  # /example1; send a message to the person who issues the command
+  # permission node: ktrigger.command.example1
+  # if you specify execute commands, you need to specify who is executing them
+  example1:
+    message:
+      - 'This is example command #1.'
+      - 'It is only seen by the person who issued it.'
+  example2:
+    executeAs: <<triggerer>>
+    execute:
+      - '/example1'
+    message:
+      - 'This command executes /example1, in addition to this message.'
+  example3:
+    executeAs: <<console>>
+    execute:
+      - '/kick <<params>>'
+  plugins:
+    # if type is 'override', the user can only access the original command
+    # if they have the node equivalent to this command's name
+    # example: ktrigger.command.plugins
+    type: override
+    message:
+      - "&CYou aren't allowed to do that."
+  pl:
+    type: override
+    message:
+      - "&CYou aren't allowed to do that."
+
+lists:
+  community:
+    - ["This is line 1 of this message.",
+       "You can escape \"\" double quotes to parse them literally.",
+       "You can use single quotes ' normally."]
+    - ["Color codes look like &bthis&f.",
+       "This message contains the variable <<recipient>>."]
+    - ["This line can&a, &fif you wish&a, &fcontain commas.",
+       "I'd recommend against large quantities of &a\"&fquotations&a,\" &fthough."]
+    - ["<<execute:/example1:<<recipient>>>>"]
+  test:
+    - ["sequence &atest message 1,&f line 1",
+       "sequence &atest message 1,&f line 2"]
+    - ["sequence &atest message 2,&f line 1",
+       "sequence &atest message 2,&f line 2"]
