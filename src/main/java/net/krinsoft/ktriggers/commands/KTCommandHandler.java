@@ -23,23 +23,28 @@ public class KTCommandHandler {
     }
 
     public boolean executeCommand(CommandSender sender, List<String> command) {
+        // make sure we have this command mapped
         if (plugin.getCommandNode(command.get(0)) == null) { return false; }
         boolean cancel = false, override = false;
         String type = plugin.getCommandNode(command.get(0)).getString("type");
         if (type != null) {
+            // check the command type
             override = type.equalsIgnoreCase("override");
             cancel = type.equalsIgnoreCase("cancel");
         }
+        // this command will only get executed if:
+        // sender has permission
+        // command overrides default functionality
+        // command cancels default functionality
         if (hasPermission(sender, command.get(0)) || override || cancel) {
             if (hasPermission(sender, command.get(0)) && cancel) {
+                // this user has permission to use this command's normal functionality
                 return false;
             }
-            String t = null;
-            if (sender instanceof Player) {
-                t = ((Player)sender).getName();
-            } else {
-                t = "Console";
-            }
+            // fetch the sender's name
+            // will deprecate in CB 1091+ due to 'CommandSender.getName()'
+            String t = getName(sender);
+            // build the parameter replacement string
             StringBuilder paramString = null;
             if (command.size() > 1) {
                 paramString = new StringBuilder(command.get(1));
@@ -47,19 +52,26 @@ public class KTCommandHandler {
                     paramString.append(" ").append(command.get(i));
                 }
             }
+            // get the configuration node for this command
             ConfigurationNode node = plugin.getCommandNode(command.get(0));
+            // check that the player hasn't already run his runOnce setting
             if (node.getBoolean("runOnce", false) && node.getStringList("runOnceList", null).contains(t)) {
                 return true;
             }
             List<String> execution = node.getStringList("execute", null);
             List<String> message = node.getStringList("message", null);
             String person = node.getString("executeAs", "<<triggerer>>").replaceAll("<<([^>]+)>>", "$1");
+            // make sure the command has execute lines
+            // make sure the triggerer exists
             if (!execution.isEmpty() && person != null) {
                 CommandSender executor = sender;
                 if (person.equalsIgnoreCase("console")) {
+                    // execute the command as the Console
                     executor = new ConsoleCommandSender(plugin.getServer());
                 }
+                // iterate through the command executions
                 for (String line : execution) {
+                    // replace relevant information on each line
                     line = line.replaceAll("(?i)&([0-F])", "\u00A7$1");
                     line = line.replaceAll("<<triggerer>>", t);
                     if (paramString != null) {
@@ -76,25 +88,13 @@ public class KTCommandHandler {
                     plugin.debug(line);
                 }
             }
+            // make sure message isn't empty
             if (!message.isEmpty()) {
                 String target = node.getString("target");
-                List<CommandSender> targets = new ArrayList<CommandSender>();
-                if (target != null) {
-                    if (target.equalsIgnoreCase("<<everyone>>")) {
-                        targets.addAll(Arrays.asList(plugin.getServer().getOnlinePlayers()));
-                    } else if (target.equalsIgnoreCase("<<triggerer>")) {
-                        targets.addAll(Arrays.asList(sender));
-                    }
-                } else {
-                    targets.addAll(Arrays.asList(sender));
-                }
+                // build a list of targets to send this message to
+                List<CommandSender> targets = buildTargetList(sender, target);
                 for (CommandSender dest : targets) {
-                    String name = null;
-                    if (dest instanceof Player) {
-                        name = ((Player)dest).getName();
-                    } else {
-                        name = "Console";
-                    }
+                    String name = getName(dest);
                     for (String line : message) {
                         line = line.replaceAll("(?i)&([0-F])", "\u00A7$1");
                         line = line.replaceAll("<<triggerer>>", t);
@@ -103,6 +103,7 @@ public class KTCommandHandler {
                     }
                 }
             }
+            // fill this sender's runOnce requirements
             if (node.getBoolean("runOnce", false)) {
                 List<String> runners = node.getStringList("runOnceList", null);
                 runners.add(t);
@@ -112,6 +113,40 @@ public class KTCommandHandler {
             return true;
         }
         return false;
+    }
+
+    public String getName(CommandSender sender) {
+        String name = null;
+        if (sender instanceof Player) {
+            name = ((Player) sender).getName();
+        } else {
+            name = "Console";
+        }
+        return name;
+    }
+
+    public List<CommandSender> buildTargetList(CommandSender sender, String target) {
+        List<CommandSender> targets = new ArrayList<CommandSender>();
+        if (target != null) {
+            if (target.equalsIgnoreCase("<<everyone>>")) {
+                targets.addAll(Arrays.asList(plugin.getServer().getOnlinePlayers()));
+            } else if (target.equalsIgnoreCase("<<triggerer>")) {
+                targets.addAll(Arrays.asList(sender));
+            } else if (target.startsWith("<<groups")) {
+                try {
+                    List<String> groups = new ArrayList<String>(Arrays.asList(target.replaceAll("<<groups:([^>]+)>>", "$1").split(",")));
+                    for (Player p : plugin.getServer().getOnlinePlayers()) {
+                        if (hasAnyGroup(p, groups)) {
+                            targets.add(p);
+                        }
+                    }
+                } catch (Exception e) {
+                }
+            }
+        } else {
+            targets.addAll(Arrays.asList(sender));
+        }
+        return targets;
     }
 
     private boolean hasPermission(CommandSender sender, String node) {
@@ -127,5 +162,18 @@ public class KTCommandHandler {
         } else {
             return false;
         }
+    }
+
+    public boolean hasGroupPermission(CommandSender sender, String node) {
+        return sender.hasPermission("group." + node);
+    }
+
+    public boolean hasAnyGroup(CommandSender sender, List<String> nodes) {
+        for (String node : nodes) {
+            if (hasGroupPermission(sender, node)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

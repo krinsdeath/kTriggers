@@ -9,7 +9,7 @@
     <name>kTriggers</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.build.number>b11</project.build.number>
+        <project.build.number>b12</project.build.number>
     </properties>
     <build>
         <plugins>
