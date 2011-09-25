@@ -43,7 +43,7 @@ public class KTCommandHandler {
             }
             // fetch the sender's name
             // will deprecate in CB 1091+ due to 'CommandSender.getName()'
-            String t = getName(sender);
+            String t = sender.getName();
             // build the parameter replacement string
             StringBuilder paramString = null;
             if (command.size() > 1) {
@@ -67,7 +67,7 @@ public class KTCommandHandler {
                 CommandSender executor = sender;
                 if (person.equalsIgnoreCase("console")) {
                     // execute the command as the Console
-                    executor = new ConsoleCommandSender(plugin.getServer());
+                    executor = plugin.getServer().getConsoleSender();
                 }
                 // iterate through the command executions
                 for (String line : execution) {
@@ -94,7 +94,7 @@ public class KTCommandHandler {
                 // build a list of targets to send this message to
                 List<CommandSender> targets = buildTargetList(sender, target);
                 for (CommandSender dest : targets) {
-                    String name = getName(dest);
+                    String name = dest.getName();
                     for (String line : message) {
                         line = line.replaceAll("(?i)&([0-F])", "\u00A7$1");
                         line = line.replaceAll("<<triggerer>>", t);
@@ -113,16 +113,6 @@ public class KTCommandHandler {
             return true;
         }
         return false;
-    }
-
-    public String getName(CommandSender sender) {
-        String name = null;
-        if (sender instanceof Player) {
-            name = ((Player) sender).getName();
-        } else {
-            name = "Console";
-        }
-        return name;
     }
 
     public List<CommandSender> buildTargetList(CommandSender sender, String target) {

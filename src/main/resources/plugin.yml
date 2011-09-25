@@ -2,6 +2,7 @@ name: kTriggers
 main: net.krinsoft.ktriggers.TriggerPlugin
 version: ${project.version}-${project.build.number}
 author: krinsdeath
+load: startup
 
 commands:
   ktrigger:

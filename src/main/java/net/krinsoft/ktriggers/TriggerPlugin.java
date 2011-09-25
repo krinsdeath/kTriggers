@@ -53,11 +53,15 @@ public class TriggerPlugin extends JavaPlugin {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 1 && args[0].equals("reload") && sender.hasPermission("ktrigger.reload")) {
-            registerConfiguration();
-            registerCommands();
-            buildTasks();
-            sender.sendMessage("Configuration for kTriggers has been reloaded.");
+        if (args.length == 1) {
+            if (args[0].equals("reload") && sender.hasPermission("ktrigger.reload")) {
+                registerConfiguration();
+                registerCommands();
+                buildTasks();
+                sender.sendMessage("Configuration for kTriggers has been reloaded.");
+            } else if (args[0].equals("version") && sender.hasPermission("ktrigger.version")) {
+                sender.sendMessage("kTrigger version: " + getDescription().getVersion());
+            }
         }
         return true;
     }
@@ -76,6 +80,7 @@ public class TriggerPlugin extends JavaPlugin {
                 "# Each permission is registered to ktrigger.command.*, which is registered to ktrigger.*",
                 "# ktrigger.reload allows the use of /ktrigger reload, and defaults to Op (but can be overridden)");
         debug = getConfiguration().getBoolean("plugin.debug", false);
+        getConfiguration().setProperty("plugin.version", getDescription().getVersion());
         configuration.save();
     }
 
@@ -104,10 +109,15 @@ public class TriggerPlugin extends JavaPlugin {
         root.setDefault(PermissionDefault.OP);
         Permission reload = new Permission("ktrigger.reload");
         reload.setDefault(PermissionDefault.OP);
+        Permission version = new Permission("ktrigger.version");
+        version.setDefault(PermissionDefault.OP);
         Permission commands = new Permission("ktrigger.command.*");
         commands.setDefault(PermissionDefault.OP);
         if (pm.getPermission(reload.getName()) == null) {
             pm.addPermission(reload);
+        }
+        if (pm.getPermission(version.getName()) == null) {
+            pm.addPermission(version);
         }
         if (pm.getPermission(commands.getName()) == null) {
             pm.addPermission(commands);
@@ -134,6 +144,7 @@ public class TriggerPlugin extends JavaPlugin {
         commands.recalculatePermissibles();
         root.getChildren().put("ktrigger.command.*", true);
         root.getChildren().put("ktrigger.reload", true);
+        root.getChildren().put("ktrigger.version", true);
         root.recalculatePermissibles();
     }
 

@@ -88,7 +88,7 @@ class TriggerTask implements Runnable {
                         String command = tmp.split(":")[1];
                         String as = tmp.split(":")[2];
                         if (as.equalsIgnoreCase("console")) {
-                            plugin.getServer().getPluginManager().callEvent(new ServerCommandEvent(new ConsoleCommandSender(plugin.getServer()), command));
+                            plugin.getServer().getPluginManager().callEvent(new ServerCommandEvent(plugin.getServer().getConsoleSender(), command));
                         } else {
                             p.chat(command);
                         }
