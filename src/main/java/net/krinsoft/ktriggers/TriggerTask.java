@@ -1,13 +1,12 @@
 package net.krinsoft.ktriggers;
 
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.server.ServerCommandEvent;
 
 /**
  *
@@ -38,8 +37,7 @@ class TriggerTask implements Runnable {
             String from = source.split(":")[0].replaceAll("<<([^>]+)>>", "$1");
             plugin.debug(from);
             if (from.startsWith("lists")) {
-                Object obj = plugin.getConfiguration().getProperty(from);
-                plugin.debug(obj);
+                Object obj = plugin.getConfig().get(from);
                 if (obj instanceof List) {
                     List<Object> objects = (List<Object>) obj;
                     if (objects.get(0) instanceof List) {
@@ -57,9 +55,11 @@ class TriggerTask implements Runnable {
                 }
             }
         } catch (NullPointerException e) {
-            plugin.debug(e.getLocalizedMessage());
+            plugin.warn("A null occurred where a null shouldn't have been. Please check 'config.yml' for improper formatting!");
+            e.printStackTrace();
         } catch (ArrayIndexOutOfBoundsException e) {
-            plugin.debug(e.getLocalizedMessage());
+            plugin.warn("One of your targets or sources is invalid! Please check 'config.yml'!");
+            e.printStackTrace();
         }
     }
 
@@ -88,9 +88,9 @@ class TriggerTask implements Runnable {
                         String command = tmp.split(":")[1];
                         String as = tmp.split(":")[2];
                         if (as.equalsIgnoreCase("console")) {
-                            plugin.getServer().getPluginManager().callEvent(new ServerCommandEvent(plugin.getServer().getConsoleSender(), command));
+                            plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), command);
                         } else {
-                            p.chat(command);
+                            plugin.getServer().dispatchCommand(p, command);
                         }
                         continue;
                     }

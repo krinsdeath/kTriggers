@@ -1,38 +1,35 @@
 package net.krinsoft.ktriggers;
 
-// event stuff
-import java.io.File;
-import java.util.List;
-import java.util.logging.Logger;
 import net.krinsoft.ktriggers.commands.KTCommandHandler;
 import net.krinsoft.ktriggers.listeners.KTPlayerListener;
-import net.krinsoft.ktriggers.listeners.KTEntityListener;
 import net.krinsoft.ktriggers.listeners.KTServerListener;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.event.Event;
-// plugin stuff
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.config.Configuration;
-import org.bukkit.util.config.ConfigurationNode;
+
+import java.io.File;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
 /**
+ *
  * @author krinsdeath
- * @license MIT OSD
  */
+@SuppressWarnings("unused")
 public class TriggerPlugin extends JavaPlugin {
     private final static Logger LOGGER = Logger.getLogger("kTriggers");
     private boolean debug;
-    private Configurator configurator;
-    private Configuration configuration;
     private PluginManager pm;
 
     private KTPlayerListener playerListener;
     private KTServerListener serverListener;
-    private KTEntityListener entityListener;
     private KTCommandHandler commandListener;
 
     @Override
@@ -61,49 +58,45 @@ public class TriggerPlugin extends JavaPlugin {
                 sender.sendMessage("Configuration for kTriggers has been reloaded.");
             } else if (args[0].equals("version") && sender.hasPermission("ktrigger.version")) {
                 sender.sendMessage("kTrigger version: " + getDescription().getVersion());
+                sender.sendMessage("by " + ChatColor.BLUE + "krinsdeath");
             }
         }
         return true;
     }
 
     private void registerConfiguration() {
-        configurator = new Configurator(this);
-        configuration = new Configuration(new File(getDataFolder(), "config.yml"));
-        configuration.load();
-        configuration.setHeader(
-                "# Each command can be given a 'runOnce' key.",
-                "# If this key is specified, it will only be run ONE TIME for that triggerer",
-                "# and cannot be executed ever again by that person, unless you edit that command's",
-                "# 'runOnceList' key and remove their name.",
-                "# ",
-                "# Each non-override command is given a permission node: ktrigger.command.[command name]",
-                "# Each permission is registered to ktrigger.command.*, which is registered to ktrigger.*",
-                "# ktrigger.reload allows the use of /ktrigger reload, and defaults to Op (but can be overridden)");
-        debug = getConfiguration().getBoolean("plugin.debug", false);
-        getConfiguration().setProperty("plugin.version", getDescription().getVersion());
-        configuration.save();
+        getConfig().setDefaults(YamlConfiguration.loadConfiguration(this.getClass().getResourceAsStream("/config.yml")));
+        if (!new File(getDataFolder(), "config.yml").exists()) {
+            getConfig().options().copyDefaults(true);
+        }
+        getConfig().options().header(
+                "Each command can be given a 'runOnce' key.\n" +
+                "If this key is specified, it will only be run ONE TIME for that triggerer\n" +
+                "and cannot be executed ever again by that person, unless you edit that command's\n" +
+                "'runOnceList' key and remove their name.\n" +
+                "\n" +
+                "Each non-override command is given a permission node: ktrigger.command.[command name]\n" +
+                "Each permission is registered to ktrigger.command.*, which is registered to ktrigger.*\n" +
+                "ktrigger.reload allows the use of /ktrigger reload, and defaults to Op (but can be overridden)");
+        getConfig().set("plugin.version", getDescription().getVersion());
+        saveConfig();
+        debug = getConfig().getBoolean("plugin.debug", false);
     }
 
     public void registerListeners() {
         playerListener = new KTPlayerListener(this);
         serverListener = new KTServerListener(this);
-        entityListener = new KTEntityListener(this);
         commandListener = new KTCommandHandler(this);
-    }
-
-    @Override
-    public Configuration getConfiguration() {
-        return configuration;
     }
 
     public void registerEvents() {
         pm = this.getServer().getPluginManager();
-        pm.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, playerListener, Event.Priority.Low, this);
-        pm.registerEvent(Event.Type.SERVER_COMMAND, serverListener, Event.Priority.Low, this);
+        pm.registerEvents(playerListener, this);
+        pm.registerEvents(serverListener, this);
     }
 
     public void registerCommands() {
-        List<String> aliases = getConfiguration().getKeys("commands");
+        Set<String> aliases = getConfig().getConfigurationSection("commands").getKeys(false);
         debug(aliases.toString());
         Permission root = new Permission("ktrigger.*");
         root.setDefault(PermissionDefault.OP);
@@ -126,7 +119,7 @@ public class TriggerPlugin extends JavaPlugin {
             pm.addPermission(root);
         }
         for (String key : aliases) {
-            ConfigurationNode node = getCommandNode(key);
+            ConfigurationSection node = getCommandNode(key);
             if (node.getString("type") == null || (!node.getString("type").equalsIgnoreCase("override") && !node.getString("type").equalsIgnoreCase("cancel"))) {
                 Permission perm = new Permission("ktrigger.command." + key);
                 String who = node.getString("who");
@@ -150,9 +143,9 @@ public class TriggerPlugin extends JavaPlugin {
 
     public void buildTasks() {
         getServer().getScheduler().cancelTasks(this);
-        ConfigurationNode node = getConfiguration().getNode("tasks");
+        ConfigurationSection node = getConfig().getConfigurationSection("tasks");
         if (node != null) {
-            List<String> tasks = node.getKeys();
+            Set<String> tasks = node.getKeys(false);
             for (String task : tasks) {
                 long delay = node.getInt(task + ".delay", 0);
                 String target = node.getString(task + ".target");
@@ -164,18 +157,23 @@ public class TriggerPlugin extends JavaPlugin {
         }
     }
 
-    public ConfigurationNode getCommandNode(String key) {
-        return this.getConfiguration().getNode("commands." + key);
+    public ConfigurationSection getCommandNode(String key) {
+        return this.getConfig().getConfigurationSection("commands." + key);
     }
 
-    public void log(Object msg) {
-        LOGGER.info(String.valueOf("[" + this + "] " + msg.toString()));
+    public void log(String message) {
+        getLogger().info(message);
     }
 
-    public void debug(Object msg) {
-        if (debug && msg != null) {
-            LOGGER.info(String.valueOf("[" + this + "] [Debug] " + msg.toString()));
+    public void debug(String message) {
+        if (debug && message != null) {
+            message = "[Debug] " + message;
+            getLogger().info(message);
         }
+    }
+
+    public void warn(String message) {
+        getLogger().warning(message);
     }
 
     public KTCommandHandler getCommandHandler() {
@@ -183,7 +181,7 @@ public class TriggerPlugin extends JavaPlugin {
     }
 
     public List<String> getList(String key) {
-        return getConfiguration().getStringList("lists." + key, null);
+        return getConfig().getStringList("lists." + key);
     }
 
 }

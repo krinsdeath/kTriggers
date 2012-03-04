@@ -1,14 +1,13 @@
 package net.krinsoft.ktriggers.commands;
 
+import net.krinsoft.ktriggers.TriggerPlugin;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import net.krinsoft.ktriggers.TriggerPlugin;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.event.server.ServerCommandEvent;
-import org.bukkit.util.config.ConfigurationNode;
 
 /**
  *
@@ -53,13 +52,13 @@ public class KTCommandHandler {
                 }
             }
             // get the configuration node for this command
-            ConfigurationNode node = plugin.getCommandNode(command.get(0));
+            ConfigurationSection node = plugin.getCommandNode(command.get(0));
             // check that the player hasn't already run his runOnce setting
-            if (node.getBoolean("runOnce", false) && node.getStringList("runOnceList", null).contains(t)) {
+            if (node.getBoolean("runOnce", false) && node.getStringList("runOnceList").contains(t)) {
                 return true;
             }
-            List<String> execution = node.getStringList("execute", null);
-            List<String> message = node.getStringList("message", null);
+            List<String> execution = node.getStringList("execute");
+            List<String> message = node.getStringList("message");
             String person = node.getString("executeAs", "<<triggerer>>").replaceAll("<<([^>]+)>>", "$1");
             // make sure the command has execute lines
             // make sure the triggerer exists
@@ -83,7 +82,7 @@ public class KTCommandHandler {
                         if (line.startsWith("/")) {
                             line = line.substring(1);
                         }
-                        plugin.getServer().getPluginManager().callEvent(new ServerCommandEvent((ConsoleCommandSender)executor, line));
+                        plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), line);
                     }
                     plugin.debug(line);
                 }
@@ -105,10 +104,10 @@ public class KTCommandHandler {
             }
             // fill this sender's runOnce requirements
             if (node.getBoolean("runOnce", false)) {
-                List<String> runners = node.getStringList("runOnceList", null);
+                List<String> runners = node.getStringList("runOnceList");
                 runners.add(t);
-                node.setProperty("runOnceList", runners);
-                plugin.getConfiguration().save();
+                node.set("runOnceList", runners);
+                plugin.saveConfig();
             }
             return true;
         }
@@ -131,6 +130,7 @@ public class KTCommandHandler {
                         }
                     }
                 } catch (Exception e) {
+                    plugin.debug("An error occurred while parsing a groups list.");
                 }
             }
         } else {
@@ -143,15 +143,7 @@ public class KTCommandHandler {
         String perm = "ktrigger.command." + node;
         boolean has = sender.hasPermission(perm);
         boolean set = sender.isPermissionSet(perm);
-        if (has) {
-            return true;
-        } else if (set && !has) {
-            return false;
-        } else if (!set && sender.hasPermission("ktrigger.command.*")) {
-            return true;
-        } else {
-            return false;
-        }
+        return has || !(set && !has) || sender.hasPermission("ktrigger.command.*");
     }
 
     public boolean hasGroupPermission(CommandSender sender, String node) {

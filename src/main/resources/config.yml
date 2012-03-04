@@ -21,7 +21,7 @@ commands:
   example1:
     message:
       - 'This is example command #1.'
-      - 'It is only seen by the person who issued it.'
+      - 'It is only seen by the person who issues it.'
   example2:
     executeAs: <<triggerer>>
     execute:

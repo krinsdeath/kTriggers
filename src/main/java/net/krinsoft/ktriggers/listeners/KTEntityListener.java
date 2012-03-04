@@ -1,13 +1,14 @@
 package net.krinsoft.ktriggers.listeners;
 
 import net.krinsoft.ktriggers.TriggerPlugin;
-import org.bukkit.event.entity.EntityListener;
+import org.bukkit.event.Listener;
 
 /**
  *
  * @author krinsdeath
  */
-public class KTEntityListener extends EntityListener {
+@SuppressWarnings("unused")
+public class KTEntityListener implements Listener {
 
     private TriggerPlugin plugin;
 
