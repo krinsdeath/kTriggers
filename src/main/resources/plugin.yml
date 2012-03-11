@@ -1,6 +1,6 @@
 name: kTriggers
 main: net.krinsoft.ktriggers.TriggerPlugin
-version: ${project.version}-${project.build.number} for Bukkit 1.1-R3
+version: ${project.version}-${project.build.number} for Bukkit 1.2.3-R0.1
 author: krinsdeath
 load: startup
 

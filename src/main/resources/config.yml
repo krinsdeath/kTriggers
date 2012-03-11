@@ -1,6 +1,5 @@
 plugin:
   debug: false
-  version: 1.0
 
 tasks:
   community:
@@ -33,13 +32,15 @@ commands:
     execute:
       - '/kick <<params>>'
   plugins:
-    # if type is 'override', the user can only access the original command
+    # if type is 'cancel', the user can only access the original command
     # if they have the node equivalent to this command's name
     # example: ktrigger.command.plugins
-    type: override
+    type: cancel
     message:
       - "&CYou aren't allowed to do that."
   pl:
+    # if type is 'override', the original functionality of the command is
+    # completely disabled
     type: override
     message:
       - "&CYou aren't allowed to do that."

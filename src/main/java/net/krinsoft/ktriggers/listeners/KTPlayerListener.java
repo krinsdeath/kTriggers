@@ -22,11 +22,14 @@ public class KTPlayerListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler(priority = EventPriority.LOWEST)
     void playerCommandPreprocess(PlayerCommandPreprocessEvent event) {
         if (event.isCancelled()) { return; }
+        plugin.debug("[Command] - " + event.getPlayer().getName() + ":" + event.getMessage());
         List<String> arguments = new ArrayList<String>(Arrays.asList(event.getMessage().substring(1).split(" ")));
-        event.setCancelled(plugin.getCommandHandler().executeCommand(event.getPlayer(), arguments));
+        if (plugin.getCommandHandler().executeCommand(event.getPlayer(), arguments)) {
+            event.setCancelled(true);
+        }
     }
 
 }

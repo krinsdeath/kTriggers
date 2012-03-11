@@ -68,6 +68,7 @@ class TriggerTask implements Runnable {
         nextIndex();
         if (target.equalsIgnoreCase("groups")) {
             for (Player p : plugin.getServer().getOnlinePlayers()) {
+                if (index >= lines.size()) { break; }
                 if (hasAnyPermission(p, this.groups)) {
                     plugin.debug("Raw lines: " + lines.get(index).toString());
                     for (String line : lines.get(index)) {
@@ -79,7 +80,7 @@ class TriggerTask implements Runnable {
             }
         } else {
             for (Player p : plugin.getServer().getOnlinePlayers()) {
-                plugin.debug("Raw lines: " + lines.get(index).toString());
+                if (index >= lines.size()) { break; }
                 for (String line : lines.get(index)) {
                     line = line.replaceAll("(?i)&([0-F])", "\u00A7$1");
                     line = line.replaceAll("<<recipient>>", p.getName());

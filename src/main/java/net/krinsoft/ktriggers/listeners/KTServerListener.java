@@ -24,18 +24,17 @@ public class KTServerListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW)
     void serverCommand(ServerCommandEvent event) {
+        plugin.debug("[Command] - " + event.getSender().getName() + ":" + event.getCommand());
         String cmd = event.getCommand();
         if (cmd.startsWith("/")) {
             cmd = cmd.substring(1);
         }
-        if (plugin.getCommandNode(cmd.split(" ")[0]) != null) {
-            if (!plugin.getCommandNode(cmd.split(" ")[0]).getString("type", "normal").equalsIgnoreCase("cancel")) {
-                List<String> arguments = new ArrayList<String>(Arrays.asList(cmd.split(" ")));
-                plugin.getCommandHandler().executeCommand(event.getSender(), arguments);
-                event.setCommand("ktrigger");
-            }
+        List<String> arguments = new ArrayList<String>(Arrays.asList(cmd.split(" ")));
+        if (plugin.getCommandHandler().validateCommand(arguments)) {
+            plugin.getCommandHandler().executeCommand(event.getSender(), arguments);
+            event.setCommand("ktrigger");
         }
-        plugin.getServer().dispatchCommand(event.getSender(), event.getCommand());
+        plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), cmd);
         event.setCommand("ktrigger");
     }
 
