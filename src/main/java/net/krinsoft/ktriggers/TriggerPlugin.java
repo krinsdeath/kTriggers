@@ -50,7 +50,9 @@ public class TriggerPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         long t = System.currentTimeMillis();
-        this.getServer().getScheduler().cancelTasks(this);
+        commandListener.cleanup();
+        configuration = null;
+        getServer().getScheduler().cancelTasks(this);
         t = System.currentTimeMillis() - t;
         log("Disabled successfully. ("+ t +"ms)");
     }
@@ -60,8 +62,11 @@ public class TriggerPlugin extends JavaPlugin {
         if (args.length == 1) {
             if ((args[0].equals("reload") || args[0].equals("-r")) && sender.hasPermission("ktrigger.reload")) {
                 long t = System.currentTimeMillis();
+                configuration = null;
                 registerConfiguration();
                 registerCommands();
+                commandListener.cleanup();
+                commandListener = new KTCommandHandler(this);
                 buildTasks();
                 t = System.currentTimeMillis() - t;
                 sender.sendMessage(ChatColor.GOLD + "[kTriggers] " + ChatColor.WHITE + "Configuration reloaded. (" + t + "ms)");

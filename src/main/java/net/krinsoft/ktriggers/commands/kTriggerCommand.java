@@ -76,7 +76,6 @@ public class kTriggerCommand implements Command {
     }
 
     public boolean execute(CommandSender sender, List<String> params) {
-        plugin.log("Executing command: " + rootCommand);
         if (once) {
             if (onceList.contains(sender.getName())) {
                 return true;

@@ -29,14 +29,18 @@ public class KTCommandHandler {
         }
     }
 
+    public void cleanup() {
+        commandMap.clear();
+    }
+
     public boolean executeCommand(CommandSender sender, List<String> command) {
         if (command.size() == 0) {
-            plugin.log("The command can't be empty...");
+            plugin.debug("The command can't be empty...");
             return false;
         }
         Command cmd = getCommand(command.remove(0));
         if (cmd == null) {
-            plugin.log("Unknown command.");
+            plugin.debug("Unknown command.");
             return false;
         }
         return cmd.execute(sender, command);
