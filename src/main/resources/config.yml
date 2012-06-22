@@ -1,5 +1,6 @@
 plugin:
   debug: false
+  log_commands: false
 
 tasks:
   community:

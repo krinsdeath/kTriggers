@@ -17,6 +17,7 @@ import java.util.List;
 public class kTriggerCommand implements Command {
     private TriggerPlugin plugin;
     private String rootCommand;
+    private boolean logCommands;
     private CommandType type;
 
     private String executeAs;
@@ -31,6 +32,7 @@ public class kTriggerCommand implements Command {
 
     public kTriggerCommand(TriggerPlugin instance, String command) {
         plugin = instance;
+        logCommands = plugin.getConfig().getBoolean("plugin.log_commands", false);
         rootCommand = (command.startsWith("/") ? command.substring(1) : command);
         if (plugin.getCommandNode(rootCommand) == null) {
             throw new InvalidCommandException("Unknown command.");
@@ -149,6 +151,9 @@ public class kTriggerCommand implements Command {
                     plugin.getServer().getPluginManager().callEvent(event);
                 }
             }
+        }
+        if (logCommands) {
+            plugin.log("[Command] " + sender.getName() + "->/" + rootCommand + " " + allParams);
         }
         return true;
     }
