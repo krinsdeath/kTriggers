@@ -24,7 +24,7 @@ public class KTServerListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW)
     void serverCommand(ServerCommandEvent event) {
-        plugin.debug("[Command] - " + event.getSender().getName() + ":" + event.getCommand());
+        plugin.debug("[Command] " + event.getSender().getName() + ":" + event.getCommand());
         String cmd = event.getCommand();
         if (cmd.startsWith("/")) {
             cmd = cmd.substring(1);

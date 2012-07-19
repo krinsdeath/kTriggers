@@ -5,12 +5,12 @@
     <groupId>net.krinsoft</groupId>
     <artifactId>kTriggers</artifactId>
     <packaging>jar</packaging>
-    <version>1.3</version>
+    <version>1.4</version>
     <name>kTriggers</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.build.number>b35</project.build.number>
+        <project.build.number>b37</project.build.number>
     </properties>
 
     <repositories>
