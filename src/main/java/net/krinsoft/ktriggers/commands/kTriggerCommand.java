@@ -101,7 +101,7 @@ public class kTriggerCommand implements Command {
         } else if (executeAs.equals("console")) {
             executors.add(plugin.getServer().getConsoleSender());
         } else if (executeAs.equals("everyone")) {
-            Collections.addAll(executors, plugin.getServer().getOnlinePlayers());
+            executors.addAll(plugin.getServer().getOnlinePlayers());
         } else {
             try {
                 int param = Integer.parseInt(executeAs.replaceAll("param([0-9]+)", "$1"));
